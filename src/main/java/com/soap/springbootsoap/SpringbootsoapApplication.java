@@ -13,7 +13,7 @@ import com.soap.wsdl.AddResponse;
 @SpringBootApplication(scanBasePackages = {"com.soap.springbootsoap", "com.soap.client", "com.soap.config"})
 public class SpringbootsoapApplication {
 
-	private static final Logger LOOGER = LoggerFactory.getLogger(SpringBootApplication.class);
+	private static final Logger LOOGER = LoggerFactory.getLogger(SpringbootsoapApplication.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringbootsoapApplication.class, args);
