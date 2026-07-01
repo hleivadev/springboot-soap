@@ -30,6 +30,7 @@ public class SoapConfig {
         SoapClient soapClient = new SoapClient();
         soapClient.setDefaultUri("http://www.dneonline.com/calculator.asmx");
         soapClient.setMarshaller(marshaller);
+        soapClient.setUnmarshaller(marshaller);
         return soapClient;
 
     }
