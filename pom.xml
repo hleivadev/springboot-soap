@@ -58,32 +58,55 @@
             <version>3.0.2</version>
         </dependency>
 
+		<!-- Jakarta JW/WS annotations needed by the classes wsimport generates
+		     (service interface + Service subclass), even though SoapConfig only
+		     uses the plain JAXB request/response classes. -->
 		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.3.1</version>
+			<groupId>jakarta.jws</groupId>
+			<artifactId>jakarta.jws-api</artifactId>
+			<version>3.0.0</version>
 		</dependency>
 
 		<dependency>
-			<groupId>javax.jws</groupId>
-			<artifactId>javax.jws-api</artifactId>
-			<version>1.1</version>
+			<groupId>jakarta.xml.ws</groupId>
+			<artifactId>jakarta.xml.ws-api</artifactId>
+			<version>4.0.3</version>
 		</dependency>
 
+		<!-- Spring-WS's own test support: lets us mock the SOAP server so tests
+		     don't depend on internet access or on the real dneonline service being up -->
 		<dependency>
-			<groupId>javax.xml.ws</groupId>
-			<artifactId>jaxws-api</artifactId>
-			<version>2.3.1</version>
+			<groupId>org.springframework.ws</groupId>
+			<artifactId>spring-ws-test</artifactId>
+			<scope>test</scope>
 		</dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Repackages the jar into an executable Spring Boot fat jar;
+                 without this "java -jar" fails with "no main manifest attribute". -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
             <!-- Plugin para generar clases desde WSDL usando wsimport -->
             <plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>jaxws-maven-plugin</artifactId>
 				<version>2.6</version>
+				<!-- The plugin bundles an old JAX-WS RI that only generates
+				     javax.xml.bind-annotated classes, incompatible with Spring
+				     Boot 3's Jakarta-only JAXB runtime. Override it with a
+				     Jakarta-based wsimport so generated classes match. -->
+				<dependencies>
+					<dependency>
+						<groupId>com.sun.xml.ws</groupId>
+						<artifactId>jaxws-tools</artifactId>
+						<version>4.0.5</version>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
 						<id>wsimport</id>
@@ -91,9 +114,10 @@
 							<goal>wsimport</goal>
 						</goals>
 						<configuration>
-							<wsdlUrls>
-								<wsdlUrl>http://www.dneonline.com/calculator.asmx?WSDL</wsdlUrl>
-							</wsdlUrls>
+							<wsdlDirectory>${project.basedir}/src/main/resources/wsdl</wsdlDirectory>
+							<wsdlFiles>
+								<wsdlFile>calculator.wsdl</wsdlFile>
+							</wsdlFiles>
 							<packageName>com.soap.wsdl</packageName>
 						</configuration>
 					</execution>

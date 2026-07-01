@@ -1,13 +1,21 @@
 package com.soap.config;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
+import org.springframework.ws.client.support.interceptor.ClientInterceptor;
+import org.springframework.ws.transport.http.HttpUrlConnectionMessageSender;
 
 import com.soap.client.SoapClient;
+import com.soap.interceptor.SoapLoggingInterceptor;
 
 @Configuration
 public class SoapConfig {
+
+    private static final String CALCULATOR_URI = "http://www.dneonline.com/calculator.asmx";
 
     @Bean
     public Jaxb2Marshaller marshaller() {
@@ -28,9 +36,20 @@ public class SoapConfig {
     public SoapClient getSoapClient(Jaxb2Marshaller marshaller) {
 
         SoapClient soapClient = new SoapClient();
-        soapClient.setDefaultUri("http://www.dneonline.com/calculator.asmx");
+        soapClient.setDefaultUri(CALCULATOR_URI);
         soapClient.setMarshaller(marshaller);
         soapClient.setUnmarshaller(marshaller);
+        soapClient.getWebServiceTemplate()
+                .setInterceptors(new ClientInterceptor[] { new SoapLoggingInterceptor() });
+        // dneonline.com's IIS server resets the connection when it sees the
+        // default "Java/x.y" User-Agent, so it must be overridden here.
+        soapClient.getWebServiceTemplate().setMessageSender(new HttpUrlConnectionMessageSender() {
+            @Override
+            protected void prepareConnection(HttpURLConnection connection) throws IOException {
+                super.prepareConnection(connection);
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+            }
+        });
         return soapClient;
 
     }
